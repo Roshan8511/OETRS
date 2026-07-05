@@ -123,10 +123,30 @@ function EventDetails() {
     return 199;
   };
 
+  // singleVenue / venue fields are stored as OBJECTS ({ name, location }) in
+  // the database, not plain strings. Rendering that object directly as JSX
+  // (or passing it downstream to another page that renders it) crashes React.
+  const getVenueName = (venueData) => {
+    if (!venueData) return "Venue TBA";
+    if (typeof venueData === "string") return venueData;
+    if (typeof venueData === "object") {
+      return (
+        venueData.name ||
+        venueData.cinemaName ||
+        venueData.city ||
+        venueData.fullAddress ||
+        venueData.location?.city ||
+        venueData.location?.fullAddress ||
+        "Venue TBA"
+      );
+    }
+    return "Venue TBA";
+  };
+
   const getSelectedVenue = () => {
-    if (event?.eventType === "movie" && selectedCinema) return selectedCinema.location || selectedCinema.cinemaName;
-    if (event?.eventType === "single") return event.singleVenue;
-    if (event?.eventType === "multi-day" && selectedMultiDate) return selectedMultiDate.venue;
+    if (event?.eventType === "movie" && selectedCinema) return selectedCinema.cinemaName || getVenueName(selectedCinema.location);
+    if (event?.eventType === "single") return getVenueName(event.singleVenue);
+    if (event?.eventType === "multi-day" && selectedMultiDate) return getVenueName(selectedMultiDate.venue);
     return "Venue TBA";
   };
 
@@ -410,7 +430,7 @@ function EventDetails() {
               <h1>{event?.title}</h1>
               <div className="movie-meta">
                 <span>🎯 {event?.category}</span>
-                <span>📍 {event?.singleVenue}</span>
+                <span>📍 {getVenueName(event?.singleVenue)}</span>
                 <span>📅 {event?.singleDate ? new Date(event.singleDate).toLocaleDateString() : "TBA"}</span>
               </div>
               <div className="movie-format">
@@ -443,7 +463,7 @@ function EventDetails() {
           <h2>📍 Venue</h2>
           <div className="venue-grid">
             <div className="venue-card selected">
-              <div className="venue-info"><h3>{event?.singleVenue}</h3><p>Main Venue</p></div>
+              <div className="venue-info"><h3>{getVenueName(event?.singleVenue)}</h3><p>Main Venue</p></div>
             </div>
           </div>
         </div>
@@ -515,7 +535,7 @@ function EventDetails() {
               <div className="venue-grid">
                 <div className="venue-card selected">
                   <div className="venue-info">
-                    <h3>{selectedMultiDate.venue}</h3>
+                    <h3>{getVenueName(selectedMultiDate.venue)}</h3>
                     <p>Total Seats: {selectedMultiDate.totalSeats} &nbsp;·&nbsp; ₹{selectedMultiDate.price} / ticket</p>
                   </div>
                 </div>
