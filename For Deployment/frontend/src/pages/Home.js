@@ -42,7 +42,11 @@ function Home() {
   const getEventCity = (event) => {
     if (event.location?.city) return event.location.city;
     if (event.venue?.city) return event.venue.city;
-    if (event.singleVenue) return event.singleVenue.split(',')[0];
+    // singleVenue is stored as an object ({ name, location }), not a plain string
+    if (event.singleVenue) {
+      if (typeof event.singleVenue === 'string') return event.singleVenue.split(',')[0];
+      return event.singleVenue.location?.city || event.singleVenue.name || "Location TBA";
+    }
     return "Location TBA";
   };
 
