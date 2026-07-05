@@ -74,18 +74,19 @@ function Events() {
     
     // Search filter (includes location search)
     if (searchTerm) {
+      const q = searchTerm.toLowerCase();
       filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.singleVenue?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        event.title.toLowerCase().includes(q) ||
+        getVenueName(event.singleVenue)?.toLowerCase().includes(q) ||
         (event.cinemaShows?.some(c =>
-          c.cinemaName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.location?.toLowerCase().includes(searchTerm.toLowerCase())
+          c.cinemaName?.toLowerCase().includes(q) ||
+          getVenueName(c.location)?.toLowerCase().includes(q)
         )) ||
-        event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description?.toLowerCase().includes(q) ||
         // Location search
-        event.location?.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location?.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location?.fullAddress?.toLowerCase().includes(searchTerm.toLowerCase())
+        event.location?.city?.toLowerCase().includes(q) ||
+        event.location?.state?.toLowerCase().includes(q) ||
+        event.location?.fullAddress?.toLowerCase().includes(q)
       );
     }
     
