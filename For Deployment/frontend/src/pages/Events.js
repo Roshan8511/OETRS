@@ -143,12 +143,34 @@ function Events() {
     return null;
   };
 
+  // singleVenue / eventDates[].venue / cinemaShows[].location are stored as
+  // OBJECTS in the database (e.g. { name, location: {...} }), not plain strings.
+  // Rendering that object directly inside JSX crashes React ("Objects are not
+  // valid as a React child") and blanks the whole page. This helper always
+  // returns a safe, renderable string.
+  const getVenueName = (venueData) => {
+    if (!venueData) return "TBD";
+    if (typeof venueData === "string") return venueData;
+    if (typeof venueData === "object") {
+      return (
+        venueData.name ||
+        venueData.cinemaName ||
+        venueData.city ||
+        venueData.fullAddress ||
+        venueData.location?.city ||
+        venueData.location?.fullAddress ||
+        "TBD"
+      );
+    }
+    return "TBD";
+  };
+
   const getEventDisplayInfo = (event) => {
     if (event.eventType === "movie") {
       const firstCinema = event.cinemaShows?.[0];
       const firstShowTime = firstCinema?.showDates?.[0]?.showTimes?.[0];
       return {
-        venue: firstCinema?.location || "TBD",
+        venue: firstCinema?.cinemaName || getVenueName(firstCinema?.location),
         date: event.movieStartDate,
         price: firstShowTime?.price || 200,
         badge: "🎬 MOVIE",
@@ -156,7 +178,7 @@ function Events() {
       };
     } else if (event.eventType === "single") {
       return {
-        venue: event.singleVenue || "TBD",
+        venue: getVenueName(event.singleVenue),
         date: event.singleDate,
         price: event.singlePrice,
         badge: "🎟️ EVENT",
@@ -165,7 +187,7 @@ function Events() {
     } else if (event.eventType === "multi-day") {
       const firstDate = event.eventDates?.[0];
       return {
-        venue: firstDate?.venue || "TBD",
+        venue: getVenueName(firstDate?.venue),
         date: firstDate?.date,
         price: firstDate?.price,
         badge: "📅 MULTI-DAY",
@@ -174,6 +196,8 @@ function Events() {
     }
     return { venue: "TBD", date: event.date, price: event.price, badge: "📅 EVENT", badgeColor: "#667eea" };
   };
+
+  const hotDisplayInfo = currentHotEvent ? getEventDisplayInfo(currentHotEvent) : null;
 
   const getCategoryIcon = (category) => {
     const icons = { music: "🎵", sports: "⚽", movies: "🎬", business: "💼", technology: "💻", food: "🍕", art: "🎨", education: "📚", comedy: "😂", other: "🎯" };
@@ -278,18 +302,12 @@ function Events() {
                     <div className="meta-item">
                       <span className="meta-icon">📅</span>
                       <span>
-                        {currentHotEvent.eventType === "movie" ? 
-                          new Date(currentHotEvent.movieStartDate).toLocaleDateString() : 
-                          new Date(currentHotEvent.singleDate || currentHotEvent.eventDates?.[0]?.date).toLocaleDateString()}
+                        {hotDisplayInfo?.date ? new Date(hotDisplayInfo.date).toLocaleDateString() : "TBA"}
                       </span>
                     </div>
                     <div className="meta-item">
                       <span className="meta-icon">📍</span>
-                      <span>
-                        {currentHotEvent.eventType === "movie" ? 
-                          currentHotEvent.cinemaShows?.[0]?.location : 
-                          currentHotEvent.singleVenue || currentHotEvent.eventDates?.[0]?.venue}
-                      </span>
+                      <span>{hotDisplayInfo?.venue || "TBD"}</span>
                     </div>
                     <div className="meta-item">
                       <span className="meta-icon">🎬</span>
