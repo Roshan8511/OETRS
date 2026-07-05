@@ -78,13 +78,34 @@ function MyBookings() {
     return null;
   };
 
+  // singleVenue / eventDates[].venue / cinemaShows[].location are stored as
+  // OBJECTS in the database ({ name, location: {...} }), not plain strings.
+  // Returning that object here and rendering it directly as JSX crashes React
+  // ("Objects are not valid as a React child") and blanks the whole page.
+  const getVenueName = (venueData) => {
+    if (!venueData) return null;
+    if (typeof venueData === "string") return venueData;
+    if (typeof venueData === "object") {
+      return (
+        venueData.name ||
+        venueData.cinemaName ||
+        venueData.city ||
+        venueData.fullAddress ||
+        venueData.location?.city ||
+        venueData.location?.fullAddress ||
+        null
+      );
+    }
+    return null;
+  };
+
   const getEventVenue = (event) => {
     if (!event) return "Venue TBA";
-    if (event.eventType === "single" && event.singleVenue) return event.singleVenue;
+    if (event.eventType === "single" && event.singleVenue) return getVenueName(event.singleVenue) || "Venue TBA";
     if (event.eventType === "movie" && event.cinemaShows?.[0]?.cinemaName) return event.cinemaShows[0].cinemaName;
-    if (event.eventType === "movie" && event.cinemaShows?.[0]?.location) return event.cinemaShows[0].location;
-    if (event.eventType === "multi-day" && event.eventDates?.[0]?.venue) return event.eventDates[0].venue;
-    if (event.venue) return typeof event.venue === "object" ? (event.venue.name || "Venue TBA") : event.venue;
+    if (event.eventType === "movie" && event.cinemaShows?.[0]?.location) return getVenueName(event.cinemaShows[0].location) || "Venue TBA";
+    if (event.eventType === "multi-day" && event.eventDates?.[0]?.venue) return getVenueName(event.eventDates[0].venue) || "Venue TBA";
+    if (event.venue) return getVenueName(event.venue) || "Venue TBA";
     return "Venue TBA";
   };
 
